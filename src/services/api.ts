@@ -1,52 +1,92 @@
 import axios from 'axios';
 
 const API = axios.create({
-    baseURL: 'http://localhost:8084/api/v1', 
+    baseURL: 'http://34.47.209.16:8084/api/v1',
     headers: {
         'Content-Type': 'application/json',
     },
 });
 
-API.interceptors.request.use((config) => {
-    const token = localStorage.getItem('accessToken');
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-});
+// Add JWT token to every request
+API.interceptors.request.use(
+    (config) => {
+        const token = localStorage.getItem('accessToken');
 
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
+    }
+);
+
+// Handle 401 responses and refresh access token
 API.interceptors.response.use(
     (response) => response,
+
     async (error) => {
         const originalRequest = error.config;
 
-        if (error.response && error.response.status === 401 && !originalRequest._retry) {
+        // Don't try refresh if there is no original request
+        if (!originalRequest) {
+            return Promise.reject(error);
+        }
+
+        // Handle unauthorized response
+        if (
+            error.response?.status === 401 &&
+            !originalRequest._retry
+        ) {
             originalRequest._retry = true;
 
             try {
                 const refreshToken = localStorage.getItem('refreshToken');
-                
+
                 if (!refreshToken) {
-                    // Refresh token එකත් නැත්නම් ලොගින් පේජ් එකට යැවීම
-                    localStorage.clear();
+                    localStorage.removeItem('accessToken');
+                    localStorage.removeItem('refreshToken');
+
                     window.location.href = '/login';
+
                     return Promise.reject(error);
                 }
 
-                const response = await axios.post('http://localhost:8084/api/v1/users/refresh-token', {
-                    refreshToken: refreshToken
-                });
+                const response = await API.post(
+                    '/users/refresh-token',
+                    {
+                        refreshToken,
+                    }
+                );
 
-                const { accessToken } = response.data.data;
+                const newAccessToken =
+                    response.data?.data?.accessToken;
 
-                localStorage.setItem('accessToken', accessToken);
+                if (!newAccessToken) {
+                    throw new Error('New access token not received');
+                }
 
-                originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+                // Save new access token
+                localStorage.setItem(
+                    'accessToken',
+                    newAccessToken
+                );
+
+                // Add new token to original request
+                originalRequest.headers.Authorization =
+                    `Bearer ${newAccessToken}`;
+
+                // Retry original request
                 return API(originalRequest);
 
             } catch (refreshError) {
-                localStorage.clear();
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('refreshToken');
+
                 window.location.href = '/login';
+
                 return Promise.reject(refreshError);
             }
         }

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import API from '../services/api';
 import BookAppointmentModal from '../components/BookAppointmentModal';
 import SalonFormModal from '../components/SalonFormModal';
@@ -28,9 +28,7 @@ export default function SalonsList() {
         try {
             const response = await API.get('salons');
             const salonsData = response.data.data || [];
-            
             const sortedSalons = salonsData.sort((a: any, b: any) => b.id - a.id);
-            
             setSalons(sortedSalons);
         } catch (err) {
             console.error('Error fetching salons', err);
@@ -39,13 +37,19 @@ export default function SalonsList() {
         }
     };
 
-    const handleFormSubmit = async (salonData: any, salonId?: number | string) => {
+    const handleFormSubmit = async (formData: FormData, salonId?: number | string) => {
         try {
+            const config = {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            };
+
             if (salonId) {
-                await API.put(`/salons/${salonId}`, salonData);
+                await API.put(`/salons/${salonId}`, formData, config);
                 alert('Salon updated successfully!');
             } else {
-                await API.post('/salons/register', salonData);
+                await API.post('/salons/register', formData, config);
                 alert('Salon registered successfully!');
             }
 
@@ -112,19 +116,16 @@ export default function SalonsList() {
                     currentSalons.map((salon) => (
                         <div key={salon.id} className="bg-white rounded-3xl shadow-sm hover:shadow-xl border border-gray-100 transition-all duration-300 overflow-hidden flex flex-col justify-between group">
                             <div>
-                                <div className="relative w-full h-48 bg-gray-100 overflow-x-auto flex snap-x snap-mandatory scrollbar-none">
-                                    {salon.images && salon.images.length > 0 ? (
-                                        salon.images.map((imgUrl: string, index: number) => (
-                                            <img 
-                                                key={index} 
-                                                src={imgUrl} 
-                                                alt={salon.name} 
-                                                className="w-full h-48 object-cover flex-shrink-0 snap-center group-hover:scale-105 transition duration-500"
-                                            />
-                                        ))
+                                <div className="relative w-full h-48 bg-gray-100 overflow-hidden">
+                                    {salon.imageUrl ? (
+                                        <img 
+                                            src={salon.imageUrl} 
+                                            alt={salon.name} 
+                                            className="w-full h-48 object-cover group-hover:scale-105 transition duration-500"
+                                        />
                                     ) : (
                                         <div className="w-full h-48 flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50 text-blue-400 text-xs font-semibold tracking-wider uppercase">
-                                            No Images Available
+                                            No Image Available
                                         </div>
                                     )}
 

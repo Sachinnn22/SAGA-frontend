@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { X, Sparkles } from 'lucide-react';
+import { X, Sparkles, Upload } from 'lucide-react';
 
 interface SalonFormModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSubmit: (formData: any, salonId?: number | string) => void;
+    onSubmit: (formData: FormData, salonId?: number | string) => void;
     initialData?: any;
 }
 
@@ -14,6 +14,8 @@ export default function SalonFormModal({ isOpen, onClose, onSubmit, initialData 
     const [phone, setPhone] = useState('');
     const [description, setDescription] = useState('');
     const [ownerEmail, setOwnerEmail] = useState('');
+    const [image, setImage] = useState<File | null>(null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
     useEffect(() => {
         if (initialData) {
@@ -22,28 +24,42 @@ export default function SalonFormModal({ isOpen, onClose, onSubmit, initialData 
             setPhone(initialData.phone || '');
             setDescription(initialData.description || '');
             setOwnerEmail(initialData.ownerEmail || '');
+            setPreviewUrl(initialData.imageUrl || null);
+            setImage(null);
         } else {
             setName('');
             setAddress('');
             setPhone('');
             setDescription('');
             setOwnerEmail('');
+            setImage(null);
+            setPreviewUrl(null);
         }
     }, [initialData, isOpen]);
+
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            setImage(file);
+            setPreviewUrl(URL.createObjectURL(file));
+        }
+    };
 
     if (!isOpen) return null;
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        const salonData = {
-            name,
-            address,
-            phone,
-            description,
-            ownerEmail
-        };
+        const formData = new FormData();
+        formData.append('name', name);
+        formData.append('address', address);
+        formData.append('phone', phone);
+        formData.append('description', description);
+        formData.append('ownerEmail', ownerEmail);
+        if (image) {
+            formData.append('image', image);
+        }
 
-        onSubmit(salonData, initialData?.id);
+        onSubmit(formData, initialData?.id);
     };
 
     return (
@@ -121,6 +137,22 @@ export default function SalonFormModal({ isOpen, onClose, onSubmit, initialData 
                             rows={3} 
                             className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50/50"
                         ></textarea>
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-semibold text-gray-600 mb-1">Salon Image</label>
+                        <div className="flex items-center gap-4">
+                            <label className="flex-1 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-xl p-4 cursor-pointer hover:border-blue-500 bg-gray-50/50 transition">
+                                <Upload className="w-5 h-5 text-gray-400 mb-1" />
+                                <span className="text-xs text-gray-500 font-medium">Choose image file</span>
+                                <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+                            </label>
+                            {previewUrl && (
+                                <div className="w-16 h-16 rounded-xl overflow-hidden border border-gray-200 flex-shrink-0">
+                                    <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     <div className="pt-3 flex gap-3">
