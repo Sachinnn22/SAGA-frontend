@@ -1,6 +1,6 @@
 # SAGA Web Application (Frontend) 🚀
 
-Welcome to the frontend interface for the **SAGA** ecosystem. It is designed to be highly responsive, providing user/member dashboards, control panels, routine tracking, and PDF report downloads directly from the platform gateway.
+Welcome to the frontend interface for the **SAGA** ecosystem. It is designed to be highly responsive, providing seamless user/member dashboards, salon discovery control panels, and appointment booking workflows directly from the platform gateway.
 
 ---
 
@@ -14,7 +14,7 @@ Welcome to the frontend interface for the **SAGA** ecosystem. It is designed to 
 
 ## 📝 Project Description
 
-The SAGA Web Application serves as the primary client-facing interface. Built with a modern, high-performance web stack, it interacts seamlessly with the backend microservices through the API Gateway, ensuring secure authentication, real-time routine management, and dynamic report rendering.
+The SAGA Web Application serves as the primary client-facing interface. Built with a modern, high-performance web stack, it interacts seamlessly with the backend microservices through the API Gateway, ensuring secure authentication, interactive salon discovery, and smooth appointment booking workflows.
 
 ---
 
