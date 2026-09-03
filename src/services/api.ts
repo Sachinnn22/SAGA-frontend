@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API = axios.create({
-    baseURL: 'http://34.47.209.16:8084/api/v1',
+    baseURL: 'http://8.234.86.175/api/v1',
     headers: {
         'Content-Type': 'application/json',
     },
@@ -89,6 +89,17 @@ API.interceptors.response.use(
 
                 return Promise.reject(refreshError);
             }
+        }
+
+        // Handle 5xx server errors / cold starts with 1 auto-retry
+        if (
+            (!error.response || (error.response.status >= 500 && error.response.status <= 504)) &&
+            !originalRequest._serverRetry
+        ) {
+            originalRequest._serverRetry = true;
+            // Wait 1.2s before retry to let service initialize
+            await new Promise((resolve) => setTimeout(resolve, 1200));
+            return API(originalRequest);
         }
 
         return Promise.reject(error);
